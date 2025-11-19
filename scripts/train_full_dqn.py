@@ -47,7 +47,7 @@ def main():
     cfg = Config()
     env = PacmanEnvFull(max_steps=2000)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     print("Using device:", device)
 
     s0 = env.reset()
