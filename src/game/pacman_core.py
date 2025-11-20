@@ -304,7 +304,8 @@ def main():
         # 玩家
         grid[player.r, player.c] = 4
 
-        state = torch.tensor(grid[None, None, :, :], dtype=torch.float32).to(device)
+        state = torch.tensor(grid[None, :, :], dtype=torch.float32)
+        state = state.unsqueeze(0)    # 變成 (1, 1, H, W)
 
         with torch.no_grad():
             q_values = model(state)

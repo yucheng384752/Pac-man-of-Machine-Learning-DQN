@@ -58,6 +58,13 @@ def main():
     target_q = CnnDQN(action_dim, rows=H, cols=W).to(device)
     target_q.load_state_dict(q.state_dict())
     target_q.eval()
+    
+    # ---- 自動載入最佳模型，如存在 ----
+    if os.path.exists(cfg.save_best):
+        print("Loading previous best model:", cfg.save_best)
+        q.load_state_dict(torch.load(cfg.save_best, map_location=device))
+        target_q.load_state_dict(q.state_dict())
+
 
     opt = optim.Adam(q.parameters(), lr=cfg.lr)
     criterion = nn.SmoothL1Loss()
