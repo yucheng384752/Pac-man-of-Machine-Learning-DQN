@@ -254,7 +254,7 @@ def main():
 
     dots, power, home_list, G_area = build_world()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     action_dim = 4
     model = CnnDQN(action_dim, ROWS, COLS).to(device)
     model.load_state_dict(torch.load("models/full_dqn_best.pt", map_location=device))

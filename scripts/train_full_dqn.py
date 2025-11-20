@@ -12,7 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT)
 print("Python Path Added:", ROOT)
 
-from src.envs.pacman_env_full import PacmanEnvFull
+from envs.pacman_env_from_core import PacmanCoreEnv
 from src.agents.cnn_dqn import CnnDQN
 from src.rl.replay_buffer import ReplayBuffer
 
@@ -45,7 +45,7 @@ def main():
     writer = SummaryWriter("logs/pacman_full")
 
     cfg = Config()
-    env = PacmanEnvFull(max_steps=2000)
+    env = PacmanCoreEnv(max_steps=2000)
 
     device = torch.device("cpu")
     print("Using device:", device)

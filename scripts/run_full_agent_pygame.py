@@ -7,7 +7,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT)
 print("Python Path Added:", ROOT)
 
-from src.envs.pacman_env_full import PacmanEnvFull
+from envs.pacman_env_from_core import PacmanEnvFull
 from src.agents.cnn_dqn import CnnDQN
 from src.game.pacman_core import (
     LEVEL, ROWS, COLS, TILE,
