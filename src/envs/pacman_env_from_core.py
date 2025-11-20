@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 from src.game.pacman_core import LEVEL, ROWS, COLS, Player, Ghost, build_world, center_xy, passable
+print(">>> Using PacmanCoreEnv from:", __file__)
 
 FPS = 60
 
@@ -11,7 +12,7 @@ class PacmanCoreEnv:
         self.max_steps = max_steps
         self.ticks = 0
         self.score = 0
-
+        self.action_space_n = 4
     def reset(self):
         self.ticks = 0
         self.score = 0

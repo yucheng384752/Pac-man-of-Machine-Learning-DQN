@@ -12,7 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT)
 print("Python Path Added:", ROOT)
 
-from envs.pacman_env_from_core import PacmanCoreEnv
+from src.envs.pacman_env_from_core import PacmanCoreEnv
 from src.agents.cnn_dqn import CnnDQN
 from src.rl.replay_buffer import ReplayBuffer
 
