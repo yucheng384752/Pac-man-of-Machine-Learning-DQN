@@ -257,7 +257,7 @@ def main():
     device = torch.device("cpu")
     action_dim = 4
     model = CnnDQN(action_dim, ROWS, COLS).to(device)
-    model.load_state_dict(torch.load("models/full_dqn_last.pt", map_location=device))
+    model.load_state_dict(torch.load("models/full_dqn_best.pt", map_location=device))
     model.eval()
 
     # 玩家與鬼
