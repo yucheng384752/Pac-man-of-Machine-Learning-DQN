@@ -51,11 +51,11 @@ def main():
     print("Using device:", device)
 
     s0 = env.reset()
-    _, H, W = s0.shape
+    C, H, W = s0.shape
     action_dim = env.action_space_n
 
-    q = CnnDQN(action_dim, rows=H, cols=W).to(device)
-    target_q = CnnDQN(action_dim, rows=H, cols=W).to(device)
+    q = CnnDQN(action_dim, in_channels=C, rows=H, cols=W).to(device)
+    target_q = CnnDQN(action_dim, in_channels=C, rows=H, cols=W).to(device)
     target_q.load_state_dict(q.state_dict())
     target_q.eval()
     
