@@ -6,7 +6,8 @@
 使用pygame建立pacman遊戲包含:pacman移動、鬼、牆壁地圖、點數、遊戲結束DQN深度強化學習Agent
 
 ## 效能
-模型效能CNN DQN，用CNN去處理影像狀態(像素畫面)，並用DQN做強化學習決策遊戲環境效能:pacman環境使用pygame，FPS大約在30~60訓練效率:300~1000 episodes(局數)，500K~2M steps(步數)
+模型效能CNN DQN，用CNN去處理影像狀態(像素畫面)，並用DQN做強化學習決策遊戲環境效能:pacman環境使用pygame，FPS大約在30~60
+訓練效率:300~1000 episodes(局數)，500K~2M steps(步數)
 ## 介面
 外部： 遊戲世界，包含整張地圖、牆壁、點點、能量球、四個鬼、pacman位置
 
