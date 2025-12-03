@@ -4,14 +4,18 @@
 # - passable() 加入空白格 ' '，避免鬼屋（空格）被視為不可走，鬼卡住
 # - 鬼在鬼屋時優先往上離開（chase/scatter/respawn），確保會陸續出屋
 # - 保持：驚嚇模式、被吃→回家→respawn→出屋，格點制移動、左右隧道、7秒散開/追逐切換
+
 import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(ROOT)
-import pygame, sys, random
+
+import pygame
+import random
 import torch
 import numpy as np
+
 from src.agents.cnn_dqn import CnnDQN   # ← 你的 CNN 模型
 
 # ---------------- 基本設定 ----------------
@@ -117,9 +121,11 @@ class GridMover:
         # 左右傳送通道（位於最外層可走格時）
         if self.at_center():
             if self.c <= 0 and passable(self.r, COLS-2):
-                self.c = COLS-2; self.snap()
+                self.c = COLS-2
+                self.snap()
             elif self.c >= COLS-1 and passable(self.r, 1):
-                self.c = 1; self.snap()
+                self.c = 1
+                self.snap()
 
 # ---------------- 玩家 ----------------
 class Player(GridMover):
@@ -244,164 +250,119 @@ def build_world():
         ghost_homes.append(ghost_homes[0])
     return dots, power, ghost_homes, G_area
 
-# ---------------- 主程式 ----------------
+# ---------------- 主程式（改成直接使用 PacmanCoreEnv） ----------------
 def main():
+    global W, H
+    import pygame
+    import torch
+    import numpy as np
+    from src.envs.pacman_env_from_core import PacmanCoreEnv  # ✅ 用訓練環境
+
     pygame.init()
     screen = pygame.display.set_mode((W, H))
-    pygame.display.set_caption("Pac-Man v0.3.2 (ghost house fix)")
+    pygame.display.set_caption("Pac-Man RL (CnnDQN from PacmanCoreEnv)")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Consolas", 18)
 
-    dots, power, home_list, G_area = build_world()
+    # === 建立環境（跟訓練用的一樣） ===
+    env = PacmanCoreEnv(max_steps=2000)
+    state = env.reset()   # shape: (C, H, W)
+    C, H, W = state.shape
 
+    # === 建立 CNN-DQN 並載入模型（跟 train_full_dqn.py 一致） ===
     device = torch.device("cpu")
-    action_dim = 4
-    model = CnnDQN(action_dim, ROWS, COLS).to(device)
-    model.load_state_dict(torch.load("models/full_dqn_last.pt", map_location=device))
+    action_dim = env.action_space_n
+
+    model = CnnDQN(
+        action_dim=action_dim,
+        in_channels=C,
+        rows=H,
+        cols=W
+    ).to(device)
+
+    # 這裡你可以選要載入 best 還是 last
+    model_path = "models/full_dqn_last.pt"
+    if not os.path.exists(model_path):
+        print("Model not found:", model_path)
+        print("請先訓練模型（scripts/train_full_dqn.py）再執行。")
+        pygame.quit()
+        sys.exit()
+
+    print("Loading model from:", model_path)
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
-    # 玩家與鬼
-    player = Player(23, 14, speed=2)
-    player.dir = (0, 0)
-
-    ghosts = [
-        Ghost(home_list[0][0], home_list[0][1], RED,    home_list[0]),
-        Ghost(home_list[1][0], home_list[1][1], PINK,   home_list[1]),
-        Ghost(home_list[2][0], home_list[2][1], CYAN,   home_list[2]),
-        Ghost(home_list[3][0], home_list[3][1], ORANGE, home_list[3]),
-    ]
-    # 初始分流方向
-    seeds = [(-1,0), (1,0), (0,1), (0,-1)]
-    for g, d in zip(ghosts, seeds):
-        g.dir = d
-
-    corners = [(1,1), (1,COLS-2), (ROWS-2,1), (ROWS-2,COLS-2)]  # 四角散開目標
-    score = 0
-    frightened_global = 0
     running = True
-    ticks = 0
 
     while running:
-        dt = clock.tick(FPS); ticks += 1
+        # 跟訓練時一樣，環境每 step 就是一個 frame
+        clock.tick(FPS)
+
+        # 處理關閉事件
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False
-                    # ---------------- AI 控制 ----------------
-        # 產生目前環境的 grid 狀態 (1, H, W)
-        grid = np.zeros((ROWS, COLS), dtype=np.float32)
 
+        # === 1) 用當前 state 推論動作 ===
+        with torch.no_grad():
+            x = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)  # (1, C, H, W)
+            q_values = model(x)
+            action = int(torch.argmax(q_values, dim=1).item())
+
+        # === 2) 丟進環境 step（完全跟訓練時一樣） ===
+        next_state, reward, done, info = env.step(action)
+        state = next_state
+
+        # === 3) 畫畫面（用 env 裡的資料） ===
+        screen.fill((0, 0, 0))
+
+        # 牆
         for r, row in enumerate(LEVEL):
             for c, ch in enumerate(row):
-                if ch == "#": grid[r, c] = 1
-
-        for (r, c) in dots:  grid[r, c] = 2
-        for (r, c) in power: grid[r, c] = 3
-
-        # 鬼
-        for g in ghosts:
-            grid[g.r, g.c] = 5
-
-        # 玩家
-        grid[player.r, player.c] = 4
-
-        state = torch.tensor(grid[None, :, :], dtype=torch.float32)
-        state = state.unsqueeze(0)    # 變成 (1, 1, H, W)
-
-        with torch.no_grad():
-            q_values = model(state)
-            action = torch.argmax(q_values).item()
-
-        # action → 方向
-        if action == 0:  player.want = (-1, 0)
-        if action == 1:  player.want = (1, 0)
-        if action == 2:  player.want = (0,-1)
-        if action == 3:  player.want = (0, 1)
-
-
-        # ---- 玩家 ----
-        if player.want != (0,0):
-            player.try_turn(player.want)
-        if player.forward_blocked():
-            player.snap()
-        else:
-            player.step()
-        player.warp()
-
-        # 吃豆/大力丸
-        if player.at_center():
-            if (player.r, player.c) in dots:
-                dots.remove((player.r, player.c)); score += 10
-            if (player.r, player.c) in power:
-                power.remove((player.r, player.c)); score += 50
-                frightened_global = FPS * 6
-                for g in ghosts:
-                    g.set_frightened(frightened_global)
-
-        # ---- 鬼 ----
-        for i, g in enumerate(ghosts):
-            # 模式切換（fright/eaten/respawn 除外）
-            g.update_mode_scatter_chase(ticks)
-
-            # 狀態對應速度
-            g.speed = g.speed_now()
-
-            # 目標/方向選擇（含屋內優先往上）
-            target = (player.r, player.c)
-            g.choose_dir(target, corners[i], G_area)
-
-            # 前方牆處理
-            if g.forward_blocked():
-                g.snap()
-            else:
-                g.step()
-            g.warp()
-
-            # respawn：離開鬼屋後切回 chase
-            if g.state == "respawn" and g.at_center() and not in_ghost_house(g.r, g.c, G_area):
-                g.state = "chase"
-
-            # 碰撞
-            if (g.r, g.c) == (player.r, player.c):
-                if g.state == "frightened":
-                    score += 200
-                    g.state = "eaten"   # 自行導航回家
-                elif g.state not in ("eaten", "respawn"):
-                    running = False     # 玩家死亡（簡化處理）
-
-            # 計時器衰減
-            g.tick_state()
-
-        if frightened_global > 0:
-            frightened_global -= 1
-
-        # ---- 繪圖 ----
-        screen.fill((0,0,0))
-        # 牆
-        for r,row in enumerate(LEVEL):
-            for c,ch in enumerate(row):
                 if ch == "#":
                     pygame.draw.rect(screen, BLUE, (c*TILE, r*TILE, TILE, TILE))
-        # 豆與大力丸
-        for (r,c) in dots:
-            pygame.draw.circle(screen, WHITE, center_xy(r,c), 3)
-        for (r,c) in power:
-            pygame.draw.circle(screen, WHITE, center_xy(r,c), 6, 1)
 
-        # 玩家
-        pygame.draw.circle(screen, YELLOW, center_xy(player.r, player.c), TILE//2 - 2)
+        # 小豆
+        for (r, c) in env.dots:
+            pygame.draw.circle(screen, WHITE, center_xy(r, c), 3)
 
-        # 鬼
-        cols = [RED, PINK, CYAN, ORANGE]
-        for idx, g in enumerate(ghosts):
-            col = SCARED if g.state == "frightened" else cols[idx]
+        # 大力丸
+        for (r, c) in env.power:
+            pygame.draw.circle(screen, WHITE, center_xy(r, c), 6, 1)
+
+        # 玩家（從 env.player 拿）
+        pygame.draw.circle(
+            screen,
+            YELLOW,
+            center_xy(env.player.r, env.player.c),
+            TILE//2 - 2
+        )
+
+        # 鬼（從 env.ghosts 拿）
+        ghost_colors = [RED, PINK, CYAN, ORANGE]
+        for idx, g in enumerate(env.ghosts):
+            col = SCARED if g.state == "frightened" else ghost_colors[idx]
             pygame.draw.circle(screen, col, center_xy(g.r, g.c), TILE//2 - 2)
 
-        # UI
-        txt = font.render(f"Score: {score}", True, WHITE)
+        # UI：顯示 score / ticks / reason
+        info_text = f"Score: {info.get('score', 0)}"
+        if "reason" in info:
+            info_text += f" ({info['reason']})"
+
+        txt = font.render(info_text, True, WHITE)
         screen.blit(txt, (10, 10))
+
         pygame.display.flip()
 
-    pygame.quit(); sys.exit()
+        # 若 episod 結束，就退出（你也可以改成 reset 再來一局）
+        if done:
+            print("Episode finished. info =", info)
+            running = False
+
+    pygame.quit()
+    sys.exit()
+
+
 
 if __name__ == "__main__":
     main()

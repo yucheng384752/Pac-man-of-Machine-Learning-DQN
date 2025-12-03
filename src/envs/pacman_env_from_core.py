@@ -107,6 +107,8 @@ class PacmanCoreEnv:
         """
         self.ticks += 1
         reward = 0.0
+        # 存活獎勵：每活一步 +0.2（鼓勵不要死）
+        reward += 0.2
 
         # ---- 玩家移動（與 pacman_core.main 相同）----
         if action == 0:
