@@ -35,7 +35,8 @@ class Config:
 
 
 def epsilon_by_step(step, cfg: Config):
-    return float(cfg.eps_end + (cfg.eps_start - cfg.eps_end) * math.exp(-step / cfg.eps_decay_steps))
+    eps = cfg.eps_end + (cfg.eps_start - cfg.eps_end) * math.exp(-step / cfg.eps_decay_steps)
+    return float(max(eps, 0.05))  # 訓練後期固定維持至少 0.05
 
 
 def main():
