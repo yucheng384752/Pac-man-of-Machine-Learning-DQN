@@ -35,7 +35,7 @@
     5. 遊戲重置:關卡清零、重新初始化角色位置
     6. 介面統一:讓 Agent 可以直接讀取 state
     
-- 3:CNN O-Network模型
+- 3:CNN Q-Network模型
     1. cnn_dqn.py（Q-Network）
         1. 使用 CNN 萃取遊戲畫面特徵
         2. FC層輸出4個動作的Q-values
