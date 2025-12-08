@@ -20,6 +20,8 @@
 
 
 # 系統分析
+<img width="1269" height="711" alt="image" src="https://github.com/user-attachments/assets/111ea678-efd7-4190-99fa-4077a5f1352c" />
+
 - 1:遊戲環境模組(pacman_core.py)
     1. 地圖解析:載入pacman地圖、牆、點、能量球
     2. pacman控制:更新位置、碰撞、吃豆子
