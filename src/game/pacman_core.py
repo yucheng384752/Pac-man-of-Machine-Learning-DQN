@@ -251,11 +251,8 @@ def build_world():
     return dots, power, ghost_homes, G_area
 
 # ---------------- 主程式（改成直接使用 PacmanCoreEnv） ----------------
+# ---------------- 主程式（用 PacmanCoreEnv + RL 模型） ----------------
 def main():
-    global W, H
-    import pygame
-    import torch
-    import numpy as np
     from src.envs.pacman_env_from_core import PacmanCoreEnv  # ✅ 用訓練環境
 
     pygame.init()
@@ -264,56 +261,63 @@ def main():
     clock = pygame.time.Clock()
     font = pygame.font.SysFont("Consolas", 18)
 
-    # === 建立環境（跟訓練用的一樣） ===
+    # === 1. 建立環境（跟訓練用的一樣） ===
     env = PacmanCoreEnv(max_steps=2000)
     state = env.reset()   # shape: (C, H, W)
-    C, H, W = state.shape
+    C, Hs, Ws = state.shape   # 用 Hs, Ws 避免蓋掉全域 W, H
 
-    # === 建立 CNN-DQN 並載入模型（跟 train_full_dqn.py 一致） ===
+    # === 2. 建立 CNN-DQN 並載入模型（跟 train_full_dqn.py 一致） ===
     device = torch.device("cpu")
     action_dim = env.action_space_n
 
     model = CnnDQN(
         action_dim=action_dim,
         in_channels=C,
-        rows=H,
-        cols=W
+        rows=Hs,
+        cols=Ws
     ).to(device)
 
-    # 這裡你可以選要載入 best 還是 last
     model_path = "models/full_dqn_last.pt"
     if not os.path.exists(model_path):
         print("Model not found:", model_path)
-        print("請先訓練模型（scripts/train_full_dqn.py）再執行。")
+        print("請先執行 scripts/train_full_dqn.py 訓練模型。")
         pygame.quit()
         sys.exit()
 
-    print("Loading model from:", model_path)
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    print(f"Loading model from: {model_path}")
+    ckpt = torch.load(model_path, map_location=device)
+    if "q" in ckpt:
+        print("Detected NEW checkpoint format → loading q")
+        model.load_state_dict(ckpt["q"])
+    else:
+        print("Detected OLD checkpoint → loading weights directly")
+        model.load_state_dict(ckpt)
+
     model.eval()
 
     running = True
+    info = {"score": 0}   # 先給一個預設，避免第一次畫面時還沒有 info
 
+    # === 3. 遊戲主迴圈 ===
     while running:
-        # 跟訓練時一樣，環境每 step 就是一個 frame
         clock.tick(FPS)
 
-        # 處理關閉事件
+        # 3-1 處理關閉事件
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False
 
-        # === 1) 用當前 state 推論動作 ===
+        # 3-2 用當前 state 推論動作（跟訓練時一樣）
         with torch.no_grad():
             x = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)  # (1, C, H, W)
             q_values = model(x)
             action = int(torch.argmax(q_values, dim=1).item())
 
-        # === 2) 丟進環境 step（完全跟訓練時一樣） ===
+        # 3-3 丟進環境 step（跟訓練時邏輯一樣）
         next_state, reward, done, info = env.step(action)
         state = next_state
 
-        # === 3) 畫畫面（用 env 裡的資料） ===
+        # 3-4 畫畫面（完全用 env 內部狀態）
         screen.fill((0, 0, 0))
 
         # 牆
@@ -330,7 +334,7 @@ def main():
         for (r, c) in env.power:
             pygame.draw.circle(screen, WHITE, center_xy(r, c), 6, 1)
 
-        # 玩家（從 env.player 拿）
+        # 玩家
         pygame.draw.circle(
             screen,
             YELLOW,
@@ -338,13 +342,13 @@ def main():
             TILE//2 - 2
         )
 
-        # 鬼（從 env.ghosts 拿）
+        # 鬼
         ghost_colors = [RED, PINK, CYAN, ORANGE]
         for idx, g in enumerate(env.ghosts):
             col = SCARED if g.state == "frightened" else ghost_colors[idx]
             pygame.draw.circle(screen, col, center_xy(g.r, g.c), TILE//2 - 2)
 
-        # UI：顯示 score / ticks / reason
+        # UI：顯示分數 / 結束原因
         info_text = f"Score: {info.get('score', 0)}"
         if "reason" in info:
             info_text += f" ({info['reason']})"
@@ -354,7 +358,7 @@ def main():
 
         pygame.display.flip()
 
-        # 若 episod 結束，就退出（你也可以改成 reset 再來一局）
+        # 3-5 一局結束就離開（你也可以改成 reset 再跑下一局）
         if done:
             print("Episode finished. info =", info)
             running = False
@@ -363,6 +367,6 @@ def main():
     sys.exit()
 
 
-
 if __name__ == "__main__":
     main()
+

@@ -34,9 +34,10 @@ class Config:
     save_last = "models/full_dqn_last.pt"
 
 
+# ε 隨步數 decay
 def epsilon_by_step(step, cfg: Config):
     eps = cfg.eps_end + (cfg.eps_start - cfg.eps_end) * math.exp(-step / cfg.eps_decay_steps)
-    return float(max(eps, 0.05))  # 訓練後期固定維持至少 0.05
+    return float(max(eps, 0.05))  # 保障最低探索率 0.05
 
 
 def main():
@@ -51,39 +52,70 @@ def main():
     device = torch.device("cpu")
     print("Using device:", device)
 
+    # 取得觀測空間 shape
     s0 = env.reset()
     C, H, W = s0.shape
     action_dim = env.action_space_n
 
+    # 建立網路
     q = CnnDQN(action_dim, in_channels=C, rows=H, cols=W).to(device)
     target_q = CnnDQN(action_dim, in_channels=C, rows=H, cols=W).to(device)
     target_q.load_state_dict(q.state_dict())
     target_q.eval()
-    
-    # ---- 自動載入最佳模型，如存在 ----
-    if os.path.exists(cfg.save_best):
-        print("Loading previous best model:", cfg.save_best)
-        q.load_state_dict(torch.load(cfg.save_best, map_location=device))
-        target_q.load_state_dict(q.state_dict())
-
 
     opt = optim.Adam(q.parameters(), lr=cfg.lr)
     criterion = nn.SmoothL1Loss()
 
     buf = ReplayBuffer(cfg.buffer_size)
 
+    # ---- 自動載入 last checkpoint ----
     global_step = 0
     best_return = -1e9
 
+    if os.path.exists(cfg.save_last):
+        print("Loading last checkpoint:", cfg.save_last)
+        ckpt = torch.load(cfg.save_last, map_location=device)
+
+        # -----------------------------
+        #  新版 checkpoint 格式（包含 optimizer）
+        # -----------------------------
+        if "q" in ckpt:
+            print("Detected NEW checkpoint format.")
+            q.load_state_dict(ckpt["q"])
+            target_q.load_state_dict(ckpt["target_q"])
+            opt.load_state_dict(ckpt["optimizer"])
+            global_step = ckpt["global_step"]
+            best_return = ckpt["best_return"]
+
+        # -----------------------------
+        #  舊版格式：只有模型權重（state_dict）
+        # -----------------------------
+        else:
+            print("Detected OLD weight-only format. Loading model weights only.")
+            q.load_state_dict(ckpt)
+            target_q.load_state_dict(ckpt)
+
+            # optimizer / global_step 全部重置
+            global_step = 0
+            best_return = -1e9
+
+        print(f"Resumed at step {global_step}, best_return={best_return}")
+
+    else:
+        print("No last checkpoint found. Start fresh training.")
+
+
+    # ------------------------------------------------
+    # 主要訓練迴圈
+    # ------------------------------------------------
     state = s0
     ep_return = 0.0
-    ep_len = 0
     episode = 0
 
     while global_step < cfg.max_steps:
         global_step += 1
-        ep_len += 1
 
+        # ε-greedy
         eps = epsilon_by_step(global_step, cfg)
         if random.random() < eps:
             action = random.randint(0, action_dim - 1)
@@ -100,6 +132,7 @@ def main():
 
         writer.add_scalar("epsilon", eps, global_step)
 
+        # ----- 更新網路 -----
         if len(buf) >= cfg.start_learning:
             s, a, r, ns, d = buf.sample(cfg.batch_size)
 
@@ -117,7 +150,6 @@ def main():
                 y = r + (1 - d) * cfg.gamma * q_target
 
             loss = criterion(q_sa, y)
-
             opt.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(q.parameters(), 10.0)
@@ -128,24 +160,45 @@ def main():
             if global_step % cfg.target_update_every == 0:
                 target_q.load_state_dict(q.state_dict())
 
+        # ----- Episode done -----
         if done:
             episode += 1
             writer.add_scalar("episode_return", ep_return, episode)
 
+            # save best model
             if ep_return > best_return:
                 best_return = ep_return
                 torch.save(q.state_dict(), cfg.save_best)
+                print(f"New Best Return: {best_return}")
 
             if episode % 10 == 0:
-                print(f"[Step {global_step}] Episode {episode} | Return {ep_return:6.2f} | Eps {eps:.3f} | Buffer {len(buf)}")
+                print(f"[Step {global_step}] Episode {episode} | Return {ep_return:.2f} | Eps {eps:.3f}")
 
             state = env.reset()
             ep_return = 0.0
-            ep_len = 0
 
-    torch.save(q.state_dict(), cfg.save_last)
+        # ----- save last checkpoint 每 5000 steps -----
+        if global_step % 5000 == 0:
+            torch.save({
+                "q": q.state_dict(),
+                "target_q": target_q.state_dict(),
+                "optimizer": opt.state_dict(),
+                "global_step": global_step,
+                "best_return": best_return
+            }, cfg.save_last)
+            print("Checkpoint saved:", cfg.save_last)
+
+
+    # 結束再存一次
+    torch.save({
+        "q": q.state_dict(),
+        "target_q": target_q.state_dict(),
+        "optimizer": opt.state_dict(),
+        "global_step": global_step,
+        "best_return": best_return
+    }, cfg.save_last)
+
     print("Training Finished. Best return:", best_return)
-
     writer.close()
 
 
