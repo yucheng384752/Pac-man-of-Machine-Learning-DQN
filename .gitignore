@@ -5,4 +5,4 @@ logs/*
 # 或你只想忽略 pacman_full 下面的
 logs/pacman_full/
 logs/pacman_full/*
-
+*.pt
