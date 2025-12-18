@@ -36,8 +36,7 @@ class Config:
 
 # ε 隨步數 decay
 def epsilon_by_step(step, cfg: Config):
-    eps = cfg.eps_end + (cfg.eps_start - cfg.eps_end) * math.exp(-step / cfg.eps_decay_steps)
-    return float(max(eps, 0.05))  # 保障最低探索率 0.05
+    return float(cfg.eps_end + (cfg.eps_start - cfg.eps_end) * math.exp(-step / cfg.eps_decay_steps))
 
 
 def main():
@@ -57,9 +56,8 @@ def main():
     C, H, W = s0.shape
     action_dim = env.action_space_n
 
-    # 建立網路
-    q = CnnDQN(action_dim, in_channels=C, rows=H, cols=W).to(device)
-    target_q = CnnDQN(action_dim, in_channels=C, rows=H, cols=W).to(device)
+    q = CnnDQN(action_dim, rows=H, cols=W).to(device)
+    target_q = CnnDQN(action_dim, rows=H, cols=W).to(device)
     target_q.load_state_dict(q.state_dict())
     target_q.eval()
 
