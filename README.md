@@ -59,4 +59,5 @@
     3. 隨機抽樣batch
     4. 協助訓練穩定收斂
 # 專案架構
+<img width="1802" height="1002" alt="{8A6579BA-7307-4ED8-9907-590BD73A0630}" src="https://github.com/user-attachments/assets/aa7fe1fa-a386-48d2-9c67-059950a956f0" />
 
