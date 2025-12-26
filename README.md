@@ -20,7 +20,7 @@
 
 
 # 系統分析
-<img width="1269" height="711" alt="image" src="https://github.com/user-attachments/assets/111ea678-efd7-4190-99fa-4077a5f1352c" />
+<img width="1146" height="656" alt="{D9871B48-02A8-4800-9564-B8ECC2AFA894}" src="https://github.com/user-attachments/assets/a9832ddc-48dd-4d87-9fd9-7e26a71b623e" />
 
 - 1:遊戲環境模組(pacman_core.py)
     1. 地圖解析:載入pacman地圖、牆、點、能量球
