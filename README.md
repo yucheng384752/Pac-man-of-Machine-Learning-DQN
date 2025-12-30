@@ -134,7 +134,7 @@
 | Input | 無 |
 | Output | (dots, power, ghost_homes, G_area) |
 | 說明 | 依照地圖字元建立豆子、大力丸與鬼屋區域 |
-# Grid Mover(Base Class)
+### Grid Mover(Base Class)
 | 項目(step) | 說明 |
 |:------|:----|
 | Function | step() |
