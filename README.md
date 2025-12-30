@@ -20,7 +20,7 @@
 
 
 # 系統分析
-<img width="1721" height="1007" alt="{6B33F1D4-3F9C-4EAE-9215-D4A978FF8B52}" src="https://github.com/user-attachments/assets/d551698f-15f4-4148-b861-a2189ad4024a" />
+c:\Users\user\AppData\Local\Packages\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TempState\ScreenClip\{1E0548F0-E280-4BA9-9096-B3752A291DDD}.png
 
 - 1:遊戲環境模組(pacman_core.py)
     1. 地圖解析:載入pacman地圖、牆、點、能量球
@@ -134,7 +134,7 @@
 | Input | 無 |
 | Output | (dots, power, ghost_homes, G_area) |
 | 說明 | 依照地圖字元建立豆子、大力丸與鬼屋區域 |
-### Grid Mover(Base Class)
+# Grid Mover(Base Class)
 | 項目(step) | 說明 |
 |:------|:----|
 | Function | step() |
