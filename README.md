@@ -20,7 +20,7 @@
 
 
 # 系統分析
-<img width="1269" height="711" alt="image" src="https://github.com/user-attachments/assets/111ea678-efd7-4190-99fa-4077a5f1352c" />
+<img width="1721" height="1007" alt="{6B33F1D4-3F9C-4EAE-9215-D4A978FF8B52}" src="https://github.com/user-attachments/assets/d551698f-15f4-4148-b861-a2189ad4024a" />
 
 - 1:遊戲環境模組(pacman_core.py)
     1. 地圖解析:載入pacman地圖、牆、點、能量球
@@ -59,4 +59,14 @@
     3. 隨機抽樣batch
     4. 協助訓練穩定收斂
 # 專案架構
+<img width="1802" height="1002" alt="{8A6579BA-7307-4ED8-9907-590BD73A0630}" src="https://github.com/user-attachments/assets/aa7fe1fa-a386-48d2-9c67-059950a956f0" />
 
+# API規格表
+## 訓練腳本(train_full_dqn.py)
+| 項目(epsilon_by_step) | 說明 |  
+|:------|:----:|
+| Function | epsilon_by_step(step, cfg) |
+| Method | Pure Function |
+| Input | step: int – 目前全域訓練步數  cfg: Config – 超參數設定 |
+| Output | eps: float |
+| 說明 | 依照訓練步數計算 ε-greedy 的探索率，採用指數衰減，並限制最小值 |

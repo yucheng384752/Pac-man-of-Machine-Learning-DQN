@@ -281,7 +281,7 @@ def main():
     ).to(device)
 
     # 這裡你可以選要載入 best 還是 last
-    model_path = "models/full_dqn_best.pt"
+    model_path = "models/full_dqn_last.pt"
     if not os.path.exists(model_path):
         print("Model not found:", model_path)
         print("請先訓練模型（scripts/train_full_dqn.py）再執行。")
