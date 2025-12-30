@@ -20,7 +20,7 @@
 
 
 # 系統分析
-c:\Users\user\AppData\Local\Packages\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TempState\ScreenClip\{1E0548F0-E280-4BA9-9096-B3752A291DDD}.png
+<img width="1122" height="620" alt="{1E0548F0-E280-4BA9-9096-B3752A291DDD}" src="https://github.com/user-attachments/assets/7453a3e7-a29a-401f-b2d3-922a13cc4020" />
 
 - 1:遊戲環境模組(pacman_core.py)
     1. 地圖解析:載入pacman地圖、牆、點、能量球
@@ -59,7 +59,7 @@ c:\Users\user\AppData\Local\Packages\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\T
     3. 隨機抽樣batch
     4. 協助訓練穩定收斂
 # 專案架構
-<img width="1802" height="1002" alt="{8A6579BA-7307-4ED8-9907-590BD73A0630}" src="https://github.com/user-attachments/assets/aa7fe1fa-a386-48d2-9c67-059950a956f0" />
+<img width="1167" height="641" alt="{39F4CB51-056D-4200-ACCC-F253389B79D7}" src="https://github.com/user-attachments/assets/e8bd5b5c-2b56-45c3-b6c4-aa7c15c68361" />
 
 # API規格表
 ## 訓練腳本(train_full_dqn.py)
