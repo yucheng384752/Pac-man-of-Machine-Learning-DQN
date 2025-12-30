@@ -64,9 +64,9 @@
 # API規格表
 ## 訓練腳本(train_full_dqn.py)
 | 項目(epsilon_by_step) | 說明 |  
-|:------|:----:|
+|:------|:----|
 | Function | epsilon_by_step(step, cfg) |
 | Method | Pure Function |
-| Input | step: int – 目前全域訓練步數  cfg: Config – 超參數設定 |
+| Input | step: int – 目前全域訓練步數<br>cfg: Config – 超參數設定 |
 | Output | eps: float |
 | 說明 | 依照訓練步數計算 ε-greedy 的探索率，採用指數衰減，並限制最小值 |
