@@ -79,7 +79,7 @@
 | Output | 無 |
 | 說明 | 主訓練流程：<br>初始化環境、模型、Replay Buffer → 執行 DQN 訓練 → 儲存 best / last checkpoint |
 ## 強化學習環境(pacman_env_from_core.py)
-| 項目(`_init_) | 說明 |
+| 項目(`_init_`) | 說明 |
 |:------|:----|
 | Function | PacmanCoreEnv(max_steps=2000) |
 | Method | Constructor |
