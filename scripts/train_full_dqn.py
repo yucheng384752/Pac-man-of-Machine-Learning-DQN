@@ -32,7 +32,7 @@ class Config:
     buffer_size = 200_000
     start_learning = 10_000
     target_update_every = 2000
-    max_steps = 500_000
+    max_steps = 1500_000
 
     eps_start = 1.0
     eps_end = 0.01
