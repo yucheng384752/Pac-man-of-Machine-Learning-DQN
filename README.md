@@ -190,3 +190,5 @@
 | Input | 無 |
 | Output | int |
 | 說明 | 回傳目前 buffer 中資料筆數 |
+# loss function
+<img width="1251" height="394" alt="image" src="https://github.com/user-attachments/assets/dee28789-d946-4060-9b0a-598c4b290d2e" />
