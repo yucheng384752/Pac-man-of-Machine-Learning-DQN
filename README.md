@@ -17,7 +17,7 @@
 
 內部：DQN Agent，包含CNN DQN、Agent(更新規則) 
 ## 驗收
-
+吃完全部的點
 
 # 系統分析
 <img width="1122" height="620" alt="{1E0548F0-E280-4BA9-9096-B3752A291DDD}" src="https://github.com/user-attachments/assets/7453a3e7-a29a-401f-b2d3-922a13cc4020" />
