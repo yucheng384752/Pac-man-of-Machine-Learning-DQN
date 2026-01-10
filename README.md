@@ -20,8 +20,64 @@
 吃完全部的點
 
 # 系統分析
-<img width="1122" height="620" alt="{1E0548F0-E280-4BA9-9096-B3752A291DDD}" src="https://github.com/user-attachments/assets/7453a3e7-a29a-401f-b2d3-922a13cc4020" />
+```mermaid
+flowchart TD
 
+%% =============================
+%% System Analysis - Breakdown
+%% =============================
+
+A[Pacman Game 系統]
+
+%% =============================
+%% Game Environment Module
+%% =============================
+A --> B[遊戲環境模組]
+
+subgraph ENV[遊戲環境模組]
+    B1[地圖解析<br/>Map Parsing]
+    B2[事件判定<br/>Collision and Event Check]
+    B3[Pacman 控制<br/>Player Control]
+    B4[鬼 Ghost AI]
+    B5[遊戲狀態管理<br/>State Management]
+    B6[得分與回饋計算<br/>Score and Reward]
+
+    B1 --> B3
+    B3 --> B2
+    B4 --> B2
+    B2 --> B6
+    B6 --> B5
+end
+
+B --> ENV
+
+%% =============================
+%% DQN Training Model
+%% =============================
+A --> C[DQN 訓練模型]
+
+subgraph DQN[DQN 訓練模型]
+    C1[訓練核心<br/>Training Loop]
+    C2[CNN-DQN 網路<br/>Q Network]
+    C3[Replay Buffer<br/>經驗回放池]
+    C4[模型更新<br/>Backpropagation]
+
+    C1 --> C2
+    C2 --> C3
+    C3 --> C4
+    C4 --> C2
+end
+
+%% =============================
+%% Training Utilities
+%% =============================
+C --> D[訓練輔助模組]
+
+subgraph UTIL[訓練輔助模組]
+    D1[模型儲存<br/>Checkpoint Save]
+    D2[TensorBoard 記錄<br/>Loss and Reward Log]
+end
+```
 - 1:遊戲環境模組(pacman_core.py)
     1. 地圖解析:載入pacman地圖、牆、點、能量球
     2. pacman控制:更新位置、碰撞、吃豆子
@@ -59,8 +115,38 @@
     3. 隨機抽樣batch
     4. 協助訓練穩定收斂
 # 專案架構
-<img width="1167" height="641" alt="{39F4CB51-056D-4200-ACCC-F253389B79D7}" src="https://github.com/user-attachments/assets/e8bd5b5c-2b56-45c3-b6c4-aa7c15c68361" />
 
+```mermaid
+flowchart TD
+
+%% =============================
+%% Phase 1: Game Environment
+%% =============================
+subgraph P1[Phase 1：遊戲環境（Game Environment）]
+    A[遊戲核心<br/>pacman_core.py<br/>定義地圖、玩家、鬼與移動規則]
+      --> B[RL 環境封裝<br/>pacman_env_from_core.py<br/>提供 reset / step]
+    B --> C[輸出：State、Reward、Done、Info<br/>提供給 DQN 使用]
+end
+
+%% =============================
+%% Phase 2: Training
+%% =============================
+subgraph P2[Phase 2：強化學習訓練（Training）]
+    C --> D[CNN-DQN<br/>cnn_dqn.py<br/>估計各動作 Q-value]
+    D --> E[經驗回放池<br/>replay_buffer.py]
+    E --> F[訓練流程控制<br/>train_full_dqn.py<br/>ε-greedy 與目標網路更新]
+    F --> G[模型權重儲存<br/>full_dqn_best.pt / full_dqn_last.pt]
+    G --> H[訓練紀錄<br/>logs/pacman_full<br/>TensorBoard]
+end
+
+%% =============================
+%% Phase 3: Prediction & Evaluation
+%% =============================
+subgraph P3[Phase 3：模型推論與評估（Prediction & Evaluation）]
+    H --> I[載入模型進行推論<br/>pacman_core.py]
+    I --> J[Pygame 視覺化<br/>顯示 AI 操作與分數]
+end
+```
 # API規格表
 ## 訓練腳本(train_full_dqn.py)
 | 項目(epsilon_by_step) | 說明 |  
@@ -192,3 +278,6 @@
 | 說明 | 回傳目前 buffer 中資料筆數 |
 # loss function
 <img width="1251" height="394" alt="image" src="https://github.com/user-attachments/assets/dee28789-d946-4060-9b0a-598c4b290d2e" />
+
+
+
