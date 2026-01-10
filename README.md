@@ -245,5 +245,21 @@ end
 # loss function
 <img width="1251" height="394" alt="image" src="https://github.com/user-attachments/assets/dee28789-d946-4060-9b0a-598c4b290d2e" />
 
+```python
 
+q_values = q(s).gather(1, a.unsqueeze(1)).squeeze(1)
 
+with torch.no_grad():
+    max_next_q = target_q(ns).max(1)[0]
+    target = r + Config.gamma * (1 - d) * max_next_q
+
+loss = nn.MSELoss()(q_values, target)
+```
+| 程式碼 | 說明 |
+|:------|:----|
+| `q(s)` | 預測所有動作 Q 值 |
+| `gather` | 取實際執行的動作 |
+| `target_q(ns)` | 目標網路預測未來 |
+| `gamma` | 折扣因子 |
+| `(1 - d)` | 避免終局錯誤學習 |
+| `MSELoss` | TD error 的平方 |
