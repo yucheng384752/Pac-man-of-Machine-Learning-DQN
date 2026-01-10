@@ -21,7 +21,7 @@
 
 # 系統分析
 ```mermaid
-flowchart LR
+flowchart TD
 
 %% =============================
 %% Core System
