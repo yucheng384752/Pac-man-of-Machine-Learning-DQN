@@ -21,99 +21,61 @@
 
 # 系統分析
 ```mermaid
-flowchart TD
+flowchart LR
 
 %% =============================
-%% System Analysis - Breakdown
+%% Core System
 %% =============================
-
 A[Pacman Game 系統]
 
 %% =============================
-%% Game Environment Module
+%% Game Environment (Left)
 %% =============================
-A --> B[遊戲環境模組]
+A --> ENV
 
 subgraph ENV[遊戲環境模組]
-    B1[地圖解析<br/>Map Parsing]
-    B2[事件判定<br/>Collision and Event Check]
-    B3[Pacman 控制<br/>Player Control]
-    B4[鬼 Ghost AI]
-    B5[遊戲狀態管理<br/>State Management]
-    B6[得分與回饋計算<br/>Score and Reward]
+    E1[地圖解析<br/>Map Parsing]
+    E2[Pacman 控制<br/>Player Control]
+    E3[鬼 Ghost AI]
+    E4[事件判定<br/>Collision and Event Check]
+    E5[得分與回饋計算<br/>Score and Reward]
+    E6[遊戲狀態管理<br/>State Management]
 
-    B1 --> B3
-    B3 --> B2
-    B4 --> B2
-    B2 --> B6
-    B6 --> B5
+    E1 --> E2
+    E2 --> E4
+    E3 --> E4
+    E4 --> E5
+    E5 --> E6
 end
 
-B --> ENV
-
 %% =============================
-%% DQN Training Model
+%% DQN Training Model (Right)
 %% =============================
-A --> C[DQN 訓練模型]
+A --> DQN
 
 subgraph DQN[DQN 訓練模型]
-    C1[訓練核心<br/>Training Loop]
-    C2[CNN-DQN 網路<br/>Q Network]
-    C3[Replay Buffer<br/>經驗回放池]
-    C4[模型更新<br/>Backpropagation]
+    D1[訓練核心<br/>Training Loop]
+    D2[CNN-DQN 網路<br/>Q Network]
+    D3[Replay Buffer<br/>Experience Replay]
+    D4[模型更新<br/>Backpropagation]
 
-    C1 --> C2
-    C2 --> C3
-    C3 --> C4
-    C4 --> C2
+    D1 --> D2
+    D2 --> D3
+    D3 --> D4
+    D4 --> D2
 end
 
 %% =============================
-%% Training Utilities
+%% Training Utilities (Far Right)
 %% =============================
-C --> D[訓練輔助模組]
+DQN --> UTIL
 
 subgraph UTIL[訓練輔助模組]
-    D1[模型儲存<br/>Checkpoint Save]
-    D2[TensorBoard 記錄<br/>Loss and Reward Log]
+    U1[模型儲存<br/>Checkpoint Save]
+    U2[TensorBoard 記錄<br/>Loss and Reward Log]
 end
 ```
-- 1:遊戲環境模組(pacman_core.py)
-    1. 地圖解析:載入pacman地圖、牆、點、能量球
-    2. pacman控制:更新位置、碰撞、吃豆子
-    3. 鬼(ghost)AI FSM:chase/scatter/frightened/eaten/respawn
-    4. 事件判定:被鬼吃、吃鬼、吃能量球、得分
-    5. 遊戲重置:關卡清零、重新初始化角色位置
-    6. reward 設計:用於強化學習訓練的回報
 
-- 2:強化學習包裝(pacman_env_from_core.py)
-    1. 將pacman_core包裝成RL:像gym的rest()、step()
-    2. CNN輸入前處理:resize, grayscale, normalization
-    3. 鬼(ghost)AI FSM:chase/scatter/frightened/eaten/respawn
-    4. 狀態堆疊（optional）:多 frame state
-    5. 遊戲重置:關卡清零、重新初始化角色位置
-    6. 介面統一:讓 Agent 可以直接讀取 state
-    
-- 3:CNN Q-Network模型
-    1. cnn_dqn.py（Q-Network）
-        1. 使用 CNN 萃取遊戲畫面特徵
-        2. FC層輸出4個動作的Q-values
-        3. forward()用於推論
-- 4:DQN 訓練模型(train_full_dqn.py)
-    1. (DQN邏輯)
-        1. ε-greedy 探索:隨訓練逐漸降低 ε
-        2. 記憶回放（Replay Buffer）:儲存 state transition
-        3. loss 計算:MSELoss
-        4. optimize:更新 Q-network
-        5. target network 同步:fixed Q-target
-    2. 模型儲存:bast model、last model
-    3. tensorBoard紀錄:loss、reword、epsilon
-    4. 儲存至Replay Buffer
-- 5:Replay Buffer(replay_buffer.py)
-    1. 儲存transition
-    2. 控制最大容量
-    3. 隨機抽樣batch
-    4. 協助訓練穩定收斂
 # 專案架構
 
 ```mermaid
